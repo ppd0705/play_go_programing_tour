@@ -2,6 +2,7 @@ package main
 
 import (
 	"block-service/global"
+	"block-service/internal/model"
 	"block-service/internal/routers"
 	setting "block-service/pkg/setting"
 	"context"
@@ -35,10 +36,24 @@ func setupSetting() error {
 	global.ServerSetting.WriteTimeout *= time.Second
 	return nil
 }
+
+func setDBEngine() error {
+	var err error
+	global.DBEngine, err = model.NewDBEngine(global.DatabaseSetting)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func init() {
 	err := setupSetting()
 	if err != nil {
 		log.Fatalf("init.setupSetting err: %v\n", err)
+	}
+	err = setDBEngine()
+	if err != nil {
+		log.Fatalf("init.setupDBengine err: %v\n", err)
 	}
 }
 

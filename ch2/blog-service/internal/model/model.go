@@ -1,5 +1,13 @@
 package model
 
+import (
+	"block-service/global"
+	"block-service/pkg/setting"
+	"fmt"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+)
+
 type Model struct {
 	ID         uint32 `gorm:"primary_key" json:"id"`
 	CreateBy   string `json:"create_by"`
@@ -10,35 +18,27 @@ type Model struct {
 	IsDel      uint8  `json:"is_del"`
 }
 
-type Tag struct {
-	*Model
-	Name  string `json:"name"`
-	State uint8  `json:"state"`
-}
+func NewDBEngine(databaseSetting *setting.DatabaseSettingS) (*gorm.DB, error) {
+	db, err := gorm.Open(databaseSetting.DBType,
+		fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=%s&parseTime=%t&loc=Local",
+			databaseSetting.UserName,
+			databaseSetting.Password,
+			databaseSetting.Host,
+			databaseSetting.DBName,
+			databaseSetting.Charset,
+			databaseSetting.ParseTime,
+		))
+	if err != nil {
+		return nil, err
+	}
 
-func (a Tag) TableName() string {
-	return "blog_name"
-}
+	if global.ServerSetting.RunMode == "debug" {
+		db.LogMode(true)
+	}
 
-type Article struct {
-	*Model
-	Title         string `json:"title"`
-	Desc          string `json:"desc"`
-	Content       string `json:"content"`
-	CoverImageUrl string `json:"cover_image_url"`
-	State         uint8  `json:"state"`
-}
+	db.SingularTable(true)
 
-func (a Article) TableName() string {
-	return "blog_article"
-}
-
-type ArticleTag struct {
-	*Model
-	TagId     uint32 `json:"tag_id"`
-	ArticleId uint32 `json:"article_id"`
-}
-
-func (a ArticleTag) TableName() string {
-	return "blog_article_tag"
+	db.DB().SetMaxIdleConns(databaseSetting.MaxIdleConns)
+	db.DB().SetMaxOpenConns(databaseSetting.MaxOpenConns)
+	return db, nil
 }
