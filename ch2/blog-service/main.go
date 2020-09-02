@@ -4,9 +4,11 @@ import (
 	"block-service/global"
 	"block-service/internal/model"
 	"block-service/internal/routers"
+	"block-service/pkg/logger"
 	setting "block-service/pkg/setting"
 	"context"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
 	"net/http"
 	"os"
@@ -46,6 +48,16 @@ func setDBEngine() error {
 	return nil
 }
 
+func setupLogger() error {
+	global.Logger = logger.NewLogger(&lumberjack.Logger{
+		Filename:  global.AppSetting.LogSavePath + "/" + global.AppSetting.LogFileName + global.AppSetting.LogFileExt,
+		MaxSize:   600,
+		MaxAge:    10,
+		LocalTime: true,
+	}, "", log.LstdFlags).WithCaller(2)
+	return nil
+}
+
 func init() {
 	err := setupSetting()
 	if err != nil {
@@ -54,6 +66,10 @@ func init() {
 	err = setDBEngine()
 	if err != nil {
 		log.Fatalf("init.setupDBengine err: %v\n", err)
+	}
+	err = setupLogger()
+	if err != nil {
+		log.Fatalf("init.setupLogger err: %v\n", err)
 	}
 }
 
@@ -67,6 +83,7 @@ func main() {
 		WriteTimeout:   global.ServerSetting.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
+	global.Logger.Info("blog service")
 	go func() {
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("ListenAndServe err: %v\n", err)
