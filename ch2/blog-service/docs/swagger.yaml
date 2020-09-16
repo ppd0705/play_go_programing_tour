@@ -1,0 +1,87 @@
+definitions:
+  errcode.Error:
+    properties:
+      code:
+        type: integer
+      details:
+        items:
+          type: string
+        type: array
+      msg:
+        type: string
+    type: object
+  model.Tag:
+    properties:
+      create_by:
+        type: string
+      created_on:
+        type: integer
+      deleted_on:
+        type: integer
+      id:
+        type: integer
+      is_del:
+        type: integer
+      modified_by:
+        type: string
+      modified_on:
+        type: integer
+      name:
+        type: string
+      state:
+        type: integer
+    type: object
+  model.TagSwagger:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/model.Tag'
+        type: array
+    type: object
+info:
+  contact: {}
+  license: {}
+  title: block_service
+  version: "1.0"
+paths:
+  /api/v1/tags:
+    get:
+      parameters:
+      - description: tag name
+        in: query
+        maxLength: 100
+        name: name
+        type: string
+      - default: 1
+        description: tag state
+        enum:
+        - 0
+        - 1
+        in: query
+        name: state
+        type: integer
+      - description: page number
+        in: query
+        name: page
+        type: integer
+      - description: number of content per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            $ref: '#/definitions/model.TagSwagger'
+        "400":
+          description: 400 Bad request
+          schema:
+            $ref: '#/definitions/errcode.Error'
+        "500":
+          description: 500 Internal error
+          schema:
+            $ref: '#/definitions/errcode.Error'
+      summary: get multi tag
+swagger: "2.0"
