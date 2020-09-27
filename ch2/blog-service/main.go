@@ -75,6 +75,7 @@ func init() {
 
 // @title block_service
 // @version 1.0
+// @description hello blog
 func main() {
 	gin.SetMode(global.ServerSetting.RunMode)
 	router := routers.NewRouter()

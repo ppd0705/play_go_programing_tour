@@ -40,6 +40,7 @@ definitions:
     type: object
 info:
   contact: {}
+  description: hello blog
   license: {}
   title: block_service
   version: "1.0"
