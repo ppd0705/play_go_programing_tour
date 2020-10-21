@@ -9,7 +9,7 @@ type Tag struct {
 }
 
 func (t Tag) TableName() string {
-	return "blog_name"
+	return "blog_tag"
 }
 
 type TagSwagger struct {

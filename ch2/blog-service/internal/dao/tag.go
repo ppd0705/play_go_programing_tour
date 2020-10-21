@@ -3,6 +3,7 @@ package dao
 import (
 	"block-service/internal/model"
 	"block-service/pkg/app"
+	"fmt"
 )
 
 func (d *Dao) CountTag(name string, state uint8) (int, error) {
@@ -20,8 +21,9 @@ func (d *Dao) CreateTag(name string, state uint8, createBy string) error {
 	tag := model.Tag{
 		Name:  name,
 		State: state,
-		Model: &model.Model{CreateBy: createBy},
+		Model: &model.Model{CreatedBy: createBy},
 	}
+	fmt.Printf("new tag: %v\n", tag)
 	return tag.Create(d.engine)
 }
 

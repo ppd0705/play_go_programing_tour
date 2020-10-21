@@ -103,7 +103,5 @@ func main() {
 	if err := s.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown:", err)
 	}
-
 	log.Println("Server exiting")
-
 }
