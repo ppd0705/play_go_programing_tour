@@ -4,6 +4,7 @@ import (
 	"block-service/global"
 	"block-service/internal/service"
 	"block-service/pkg/app"
+	"block-service/pkg/convert"
 	"block-service/pkg/errcode"
 	"github.com/gin-gonic/gin"
 )
@@ -70,7 +71,7 @@ func (t Tag) Create(c *gin.Context) {
 	response.ToResponse(gin.H{})
 }
 func (t Tag) Update(c *gin.Context) {
-	param := service.UpdateTagRequest{}
+	param := service.UpdateTagRequest{ID: convert.StrTo(c.Param("id")).MustUint32()}
 	response := app.NewResponse(c)
 	valid, errs := app.BindAndValid(c, &param)
 	if !valid {
@@ -89,7 +90,7 @@ func (t Tag) Update(c *gin.Context) {
 	return
 }
 func (t Tag) Delete(c *gin.Context) {
-	param := service.DeleteTagRequest{}
+	param := service.DeleteTagRequest{ID: convert.StrTo(c.Param("id")).MustUint32()}
 	response := app.NewResponse(c)
 	valid, errs := app.BindAndValid(c, &param)
 	if !valid {

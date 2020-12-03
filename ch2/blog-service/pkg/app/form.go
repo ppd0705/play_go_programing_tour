@@ -34,7 +34,7 @@ func (v ValidErrors) Error() string {
 func BindAndValid(c *gin.Context, v interface{}) (bool, ValidErrors) {
 	var errs ValidErrors
 	err := c.ShouldBind(v)
-	fmt.Printf("v: %v\n", v)
+	fmt.Printf("[debug] BindAndValid: v: %v, err: %v, path: %v, \n", v, err, c.FullPath())
 	if err != nil {
 		v := c.Value("trans")
 		trans, _ := v.(ut.Translator)
