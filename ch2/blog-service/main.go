@@ -5,7 +5,7 @@ import (
 	"block-service/internal/model"
 	"block-service/internal/routers"
 	"block-service/pkg/logger"
-	setting "block-service/pkg/setting"
+	"block-service/pkg/setting"
 	"context"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -34,6 +34,11 @@ func setupSetting() error {
 	if err != nil {
 		return err
 	}
+	err = newSetting.ReadSection("JWT", &global.JWTSetting)
+	if err != nil {
+		return err
+	}
+	global.JWTSetting.Expire *= time.Second
 	global.ServerSetting.ReadTimeOut *= time.Second
 	global.ServerSetting.WriteTimeout *= time.Second
 	return nil

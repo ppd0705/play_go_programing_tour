@@ -1,12 +1,15 @@
 package routers
 
 import (
-	"block-service/internal/middleware"
-	v1 "block-service/internal/routers/api/v1"
 	_ "block-service/docs"
+	"block-service/global"
+	"block-service/internal/middleware"
+	"block-service/internal/routers/api"
+	v1 "block-service/internal/routers/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"net/http"
 )
 
 func NewRouter() *gin.Engine {
@@ -14,7 +17,13 @@ func NewRouter() *gin.Engine {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(middleware.Translations())
+	r.Use(middleware.JWT())
 	r.GET("/swapper/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	upload := api.NewUpload()
+	r.POST("/upload/file", upload.UploadFile)
+	r.StaticFS("/static", http.Dir(global.AppSetting.UploadSavePath))
+	r.GET("/auth", api.GetAuth)
 
 	apiv1 := r.Group("/api/v1")
 
