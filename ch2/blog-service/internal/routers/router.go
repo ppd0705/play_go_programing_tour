@@ -6,18 +6,35 @@ import (
 	"block-service/internal/middleware"
 	"block-service/internal/routers/api"
 	v1 "block-service/internal/routers/api/v1"
+	"block-service/pkg/limiter"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
+	"time"
 )
 
 func NewRouter() *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	if global.ServerSetting.RunMode == "debug" {
+		r.Use(gin.Logger())
+		r.Use(gin.Recovery())
+	} else {
+		r.Use(middleware.AccessLog())
+		r.Use(middleware.Recovery())
+	}
+	methodLimiters := limiter.NewMethodLimiter().AddBuckets(
+		limiter.LimitBucketRule{
+			Key: "/auth",
+			FillInterval: time.Second,
+			Capacity: 10,
+			Quantum: 10,
+		})
+	r.Use(middleware.RateLimiter(methodLimiters))
+	r.Use(middleware.ContextTimeout(time.Second*60))
 	r.Use(middleware.Translations())
 	r.Use(middleware.JWT())
+
 	r.GET("/swapper/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	upload := api.NewUpload()
