@@ -8,6 +8,8 @@ import (
 	"block-service/pkg/setting"
 	"block-service/pkg/tracer"
 	"context"
+	"flag"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
@@ -17,6 +19,24 @@ import (
 	"syscall"
 	"time"
 )
+
+var (
+	port         string
+	runMode      string
+	config       string
+	isVersion    bool
+	buildVersion string
+	gitCommitID  string
+)
+
+func setupFlag() error {
+	flag.StringVar(&port, "port", "", "listen port")
+	flag.StringVar(&runMode, "mode", "", "run mode")
+	flag.StringVar(&config, "config", "configs/", "config path")
+	flag.BoolVar(&isVersion, "version", false, "version info")
+	flag.Parse()
+	return nil
+}
 
 func setupSetting() error {
 	newSetting, err := setting.NewSetting()
@@ -42,6 +62,12 @@ func setupSetting() error {
 	global.JWTSetting.Expire *= time.Second
 	global.ServerSetting.ReadTimeOut *= time.Second
 	global.ServerSetting.WriteTimeout *= time.Second
+	if port != "" {
+		global.ServerSetting.HttpPort = port
+	}
+	if runMode != "" {
+		global.ServerSetting.RunMode = runMode
+	}
 	return nil
 }
 
@@ -65,7 +91,11 @@ func setupLogger() error {
 }
 
 func init() {
-	err := setupSetting()
+	err := setupFlag()
+	if err != nil {
+		log.Fatalf("init.setupFlag err: %v", err)
+	}
+	err = setupSetting()
 	if err != nil {
 		log.Fatalf("init.setupSetting err: %v\n", err)
 	}
@@ -96,6 +126,12 @@ func setupTracer() error {
 // @version 1.0
 // @description hello blog
 func main() {
+	if isVersion {
+		fmt.Printf("build verson: %s\n", buildVersion)
+		fmt.Printf("commit id: %s\n", gitCommitID)
+		return
+	}
+
 	gin.SetMode(global.ServerSetting.RunMode)
 	router := routers.NewRouter()
 	s := &http.Server{
