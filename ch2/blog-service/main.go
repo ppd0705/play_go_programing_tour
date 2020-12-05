@@ -6,6 +6,7 @@ import (
 	"block-service/internal/routers"
 	"block-service/pkg/logger"
 	"block-service/pkg/setting"
+	"block-service/pkg/tracer"
 	"context"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -76,6 +77,19 @@ func init() {
 	if err != nil {
 		log.Fatalf("init.setupLogger err: %v\n", err)
 	}
+	err = setupTracer()
+	if err != nil {
+		log.Fatalf("init.setupTracer err: %v\n", err)
+	}
+}
+
+func setupTracer() error {
+	jaegerTracer, _, err := tracer.NewJaegerTracer("blog-service", "127.0.0.1:6831")
+	if err != nil {
+		return err
+	}
+	global.Tracer = jaegerTracer
+	return nil
 }
 
 // @title block_service
