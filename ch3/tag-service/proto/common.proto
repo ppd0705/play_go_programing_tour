@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
+
 package proto;
 
 message Pager {
@@ -8,4 +10,8 @@ message Pager {
     int64 total_rows = 3;
 }
 
-
+message Error {
+    int32 code = 1;
+    string message = 2;
+    google.protobuf.Any detail = 3;
+}
