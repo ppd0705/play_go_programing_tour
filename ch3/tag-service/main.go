@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -13,14 +14,17 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"tag-service/internal/middleware"
 	pb "tag-service/proto"
 	"tag-service/server"
 )
 
+const ServiceName = "tag-service"
+
 var port string
 
 func init() {
-	flag.StringVar(&port, "port", "0", "listen port")
+	flag.StringVar(&port, "port", "1034", "listen port")
 	flag.Parse()
 }
 func grpcHandleerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
@@ -51,7 +55,12 @@ func runGrpcGatewayServer() *runtime.ServeMux {
 
 func runGrpcServer() *grpc.Server {
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(HelloInterceptor),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			middleware.Recovery,
+			HelloInterceptor,
+			middleware.AccessLog,
+			middleware.ErrorLog,
+			)),
 	}
 	s := grpc.NewServer(opts...)
 	pb.RegisterTagServiceServer(s, server.NewTagServer())
@@ -64,6 +73,18 @@ func RunServer(port string) error {
 	gatewayMux := runGrpcGatewayServer()
 	grpcS := runGrpcServer()
 	httpMux.Handle("/", gatewayMux)
+
+	//etcdClient, err := clientv3.New(clientv3.Config{
+	//	Endpoints: []string{"http://localhost:2379"},
+	//	DialTimeout: time.Second*3,
+	//})
+	//if err != nil {
+	//	return err
+	//}
+	//defer etcdClient.Close()
+	//target := fmt.Sprintf("/etcdv3://golang/grpc/%s", ServiceName)
+	//grpcproxy.Register(etcdClient, target, ":"+port, 60)
+
 	return http.ListenAndServe(":"+port, grpcHandleerFunc(grpcS, httpMux))
 
 }
@@ -84,6 +105,7 @@ func runServer0() {
 	s := grpc.NewServer()
 	pb.RegisterTagServiceServer(s, server.NewTagServer())
 	reflection.Register(s)
+
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
